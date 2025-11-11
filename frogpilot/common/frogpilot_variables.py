@@ -295,7 +295,7 @@ class FrogPilotVariables:
     has_nnff = nnff_supported(toggle.car_model)
     toggle.has_pedal = CP.enableGasInterceptorDEPRECATED
     has_radar = not CP.radarUnavailable
-    toggle.has_sdsu = toggle.car_make == "toyota" and bool(FPCP.flags & ToyotaFrogPilotFlags.SMART_DSU.value)
+    toggle.has_sdsu = False #toggle.car_make == "toyota" and bool(FPCP.flags & ToyotaFrogPilotFlags.SMART_DSU.value)
     has_sng = CP.autoResumeSng
     toggle.has_zss = toggle.car_make == "toyota" and bool(FPCP.flags & ToyotaFrogPilotFlags.ZSS.value)
     is_angle_car = CP.steerControlType == car.CarParams.SteerControlType.angle
@@ -560,6 +560,9 @@ class FrogPilotVariables:
     toggle.human_lane_changes = longitudinal_tuning and has_radar and (self.params.get_bool("HumanLaneChanges") if tuning_level >= level["HumanLaneChanges"] else default["HumanLaneChanges"])
     toggle.lead_detection_probability = np.clip((self.params.get("LeadDetectionThreshold") if longitudinal_tuning and tuning_level >= level["LeadDetectionThreshold"] else default["LeadDetectionThreshold"]) / 100, 0.25, 0.50)
     toggle.taco_tune = longitudinal_tuning and (self.params.get_bool("TacoTune") if tuning_level >= level["TacoTune"] else default["TacoTune"])
+
+    toggle.model = default["DrivingModel"]
+    toggle.model_name = "Firehose"
 
     toggle.model_ui = self.params.get_bool("ModelUI") if tuning_level >= level["ModelUI"] else default["ModelUI"]
     toggle.dynamic_path_width = toggle.model_ui and (self.params.get_bool("DynamicPathWidth") if tuning_level >= level["DynamicPathWidth"] else default["DynamicPathWidth"])
