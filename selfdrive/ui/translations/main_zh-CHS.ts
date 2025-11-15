@@ -254,8 +254,8 @@
         <translation type="gpt-5-generated">扭矩 %</translation>
     </message>
     <message>
-        <source>DANGER FACTOR</source>
-        <translation type="gpt-5-generated">危险因素</translation>
+        <source>DANGER %</source>
+        <translation type="gpt-5-generated">危险 %</translation>
     </message>
 </context>
 <context>
@@ -4344,6 +4344,18 @@ Developer - Highly customizable settings for seasoned enthusiasts</source>
     <message>
         <source>&lt;b&gt;Improves acceleration from a standstill for a more responsive throttle feel in city driving.&lt;/b&gt;</source>
         <translation type="gpt-5-generated">&lt;b&gt;在城市驾驶中，从静止起步提升加速性能，带来更灵敏的油门响应。&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>GM CSLC</source>
+        <translation type="gpt-5-generated">GM CSLC</translation>
+    </message>
+    <message>
+        <source>Set cars cruise speed based on SLC, MTSC, VTSC, &amp; CEM.
+
+Turns OpenPilot Longitudnal Control off for camera ACC cars.</source>
+        <translation type="gpt-5-generated">根据 SLC、MTSC、VTSC 和 CEM 设置车辆巡航速度。
+
+为配备摄像头 ACC 的车辆关闭 openpilot 纵向控制。</translation>
     </message>
 </context>
 <context>

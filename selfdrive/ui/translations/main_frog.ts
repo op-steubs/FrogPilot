@@ -254,8 +254,8 @@
         <translation type="gpt-5-generated">Ribbit TORQUE % croak</translation>
     </message>
     <message>
-        <source>DANGER FACTOR</source>
-        <translation type="gpt-5-generated">RIBBIT DANGER FACTOR CROAK</translation>
+        <source>DANGER %</source>
+        <translation type="gpt-5-generated">Ribbit! DANGER % — croak!</translation>
     </message>
 </context>
 <context>
@@ -4344,6 +4344,18 @@ Developer - Highly customizable settings for seasoned swamp pros</translation>
     <message>
         <source>&lt;b&gt;Improves acceleration from a standstill for a more responsive throttle feel in city driving.&lt;/b&gt;</source>
         <translation type="gpt-5-generated">&lt;b&gt;Ribbit! Speeds up from a stop, for snappier throttle feel in city hops. Croak.&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>GM CSLC</source>
+        <translation type="gpt-5-generated">GM CSLC, ribbit!</translation>
+    </message>
+    <message>
+        <source>Set cars cruise speed based on SLC, MTSC, VTSC, &amp; CEM.
+
+Turns OpenPilot Longitudnal Control off for camera ACC cars.</source>
+        <translation type="gpt-5-generated">Ribbit! Set car’s cruise speed by SLC, MTSC, VTSC, &amp; CEM. Croak!
+
+Croak! Turns openpilot Longitudinal Control off for camera ACC cars. Ribbit!</translation>
     </message>
 </context>
 <context>

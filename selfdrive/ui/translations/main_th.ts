@@ -254,8 +254,8 @@
         <translation type="gpt-5-generated">แรงบิด %</translation>
     </message>
     <message>
-        <source>DANGER FACTOR</source>
-        <translation type="gpt-5-generated">ปัจจัยอันตราย</translation>
+        <source>DANGER %</source>
+        <translation type="gpt-5-generated">อันตราย %</translation>
     </message>
 </context>
 <context>
@@ -4344,6 +4344,18 @@ Developer - Highly customizable settings for seasoned enthusiasts</source>
     <message>
         <source>&lt;b&gt;Improves acceleration from a standstill for a more responsive throttle feel in city driving.&lt;/b&gt;</source>
         <translation type="gpt-5-generated">&lt;b&gt;ปรับปรุงอัตราเร่งจากหยุดนิ่งเพื่อให้คันเร่งตอบสนองมากขึ้นในการขับขี่ในเมือง&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>GM CSLC</source>
+        <translation type="gpt-5-generated">GM CSLC</translation>
+    </message>
+    <message>
+        <source>Set cars cruise speed based on SLC, MTSC, VTSC, &amp; CEM.
+
+Turns OpenPilot Longitudnal Control off for camera ACC cars.</source>
+        <translation type="gpt-5-generated">ตั้งค่าความเร็วครูซของรถตาม SLC, MTSC, VTSC และ CEM
+
+ปิดการควบคุมตามยาวของ OpenPilot สำหรับรถที่ใช้กล้อง ACC</translation>
     </message>
 </context>
 <context>

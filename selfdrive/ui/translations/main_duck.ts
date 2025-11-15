@@ -254,8 +254,8 @@
         <translation type="gpt-5-generated">Quack! TORQUE % — waddle-whoosh!</translation>
     </message>
     <message>
-        <source>DANGER FACTOR</source>
-        <translation type="gpt-5-generated">QUACK DANGER FACTOR WADDLE!</translation>
+        <source>DANGER %</source>
+        <translation type="gpt-5-generated">Quack! DANGER % — waddle carefully!</translation>
     </message>
 </context>
 <context>
@@ -4346,6 +4346,17 @@ Developer - Ultra-custom settings for seasoned duckthusiasts</translation>
     <message>
         <source>&lt;b&gt;Improves acceleration from a standstill for a more responsive throttle feel in city driving.&lt;/b&gt;</source>
         <translation type="gpt-5-generated">&lt;b&gt;Quack! Zips off the line for peppier throttle feel in city waddling, quack.&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>GM CSLC</source>
+        <translation type="gpt-5-generated">Quack! GM CSLC, waddle-waddle!</translation>
+    </message>
+    <message>
+        <source>Set cars cruise speed based on SLC, MTSC, VTSC, &amp; CEM.
+
+Turns OpenPilot Longitudnal Control off for camera ACC cars.</source>
+        <translation type="gpt-5-generated">Quack! Set car’s cruise speed by SLC, MTSC, VTSC, &amp; CEM—waddle on!
+Quack-quack: Turns openpilot Longitudnal Control off for camera ACC cars.</translation>
     </message>
 </context>
 <context>

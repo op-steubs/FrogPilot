@@ -254,8 +254,8 @@
         <translation type="gpt-5-generated">DREHMOMENT %</translation>
     </message>
     <message>
-        <source>DANGER FACTOR</source>
-        <translation type="gpt-5-generated">GEFAHRENFAKTOR</translation>
+        <source>DANGER %</source>
+        <translation type="gpt-5-generated">GEFAHR %</translation>
     </message>
 </context>
 <context>
@@ -4344,6 +4344,18 @@ Entwickler – Hochgradig anpassbare Einstellungen für versierte Enthusiasten</
     <message>
         <source>&lt;b&gt;Improves acceleration from a standstill for a more responsive throttle feel in city driving.&lt;/b&gt;</source>
         <translation type="gpt-5-generated">&lt;b&gt;Verbessert die Beschleunigung aus dem Stand für ein reaktionsschnelleres Gaspedalgefühl im Stadtverkehr.&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>GM CSLC</source>
+        <translation type="gpt-5-generated">GM CSLC</translation>
+    </message>
+    <message>
+        <source>Set cars cruise speed based on SLC, MTSC, VTSC, &amp; CEM.
+
+Turns OpenPilot Longitudnal Control off for camera ACC cars.</source>
+        <translation type="gpt-5-generated">Stellen Sie die Reisegeschwindigkeit des Fahrzeugs basierend auf SLC, MTSC, VTSC und CEM ein.
+
+Schaltet die OpenPilot-Längssteuerung bei Kamera-ACC-Fahrzeugen aus.</translation>
     </message>
 </context>
 <context>
