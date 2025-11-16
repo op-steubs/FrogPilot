@@ -173,13 +173,6 @@ class Car:
     self.resume_prev_button = False
 
     # FrogPilot variables
-    self.frogpilot_card = FrogPilotCard(self.CP)
-
-    self.sm = self.sm.extend(['frogpilotOnroadEvents', 'frogpilotPlan', 'liveCalibration', 'selfdriveState'])
-    self.pm = self.pm.extend(['frogpilotCarState'])
-
-    self.frogpilot_toggles = get_frogpilot_toggles()
-
     if self.frogpilot_toggles.always_on_lateral:
       self.FPCP.alternativeExperience |= ALTERNATIVE_EXPERIENCE.ALWAYS_ON_LATERAL
 
@@ -188,6 +181,13 @@ class Car:
     self.params.put_nonblocking("FrogPilotCarParamsPersistent", fpcp_bytes)
 
     update_frogpilot_toggles()
+
+    self.frogpilot_card = FrogPilotCard(self.CP, self.FPCP)
+
+    self.sm = self.sm.extend(['frogpilotOnroadEvents', 'frogpilotPlan', 'liveCalibration', 'selfdriveState'])
+    self.pm = self.pm.extend(['frogpilotCarState'])
+
+    self.frogpilot_toggles = get_frogpilot_toggles()
 
   def state_update(self) -> tuple[car.CarState, structs.RadarDataT | None]:
     """carState update loop, driven by can"""
