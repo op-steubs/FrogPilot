@@ -186,6 +186,11 @@ Controlled via parameter keys like:
 - `FlashPanda` - Vehicle interface firmware
 - `IssueReported` - Error reporting webhook
 
+### Adding New Parameters
+When adding a new parameter/toggle, it must be added to **both** files:
+1. **`frogpilot/common/frogpilot_variables.py`** - Parameter definition and default value
+2. **`common/params.cc`** - Params whitelist (or you'll get `UnknownKeyName` error)
+
 ### Steering Wheel Button Customization
 Buttons can be mapped to these functions:
 - 0: NOTHING
