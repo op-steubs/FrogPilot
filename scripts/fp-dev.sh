@@ -138,8 +138,8 @@ cmd_build() {
     SCONS_CMD="PATH=/usr/local/pyenv/versions/3.11.4/bin:\$PATH /usr/local/pyenv/versions/3.11.4/bin/python -m SCons --cache-disable -j4"
     BUILD_PARAMS="cd ${REPO_PATH} && ${SCONS_CMD} common/params_pyx.so"
 
-    print_status "Building UI..."
-    BUILD_UI="cd ${REPO_PATH} && ${SCONS_CMD} selfdrive/ui/"
+    print_status "Building UI (main binary only)..."
+    BUILD_UI="cd ${REPO_PATH} && ${SCONS_CMD} selfdrive/ui/_ui"
 
     # Combine both builds
     BUILD_CMD="${BUILD_PARAMS} && ${BUILD_UI}"
