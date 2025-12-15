@@ -139,7 +139,7 @@ cmd_build() {
     BUILD_PARAMS="cd ${REPO_PATH} && ${SCONS_CMD} common/params_pyx.so"
 
     print_status "Building UI (main binary only)..."
-    BUILD_UI="cd ${REPO_PATH} && ${SCONS_CMD} selfdrive/ui/_ui"
+    BUILD_UI="cd ${REPO_PATH} && ${SCONS_CMD} selfdrive/ui/ui"
 
     # Combine both builds
     BUILD_CMD="${BUILD_PARAMS} && ${BUILD_UI}"
