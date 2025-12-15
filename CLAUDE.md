@@ -51,6 +51,17 @@ ssh -i ~/.ssh/id_ed25519 comma@10.7.7.133
 - **Port**: 22
 - **Key**: ~/.ssh/id_ed25519
 
+### Deploying Branches to Device
+To checkout a new branch on the comma device (from the user's fork):
+```bash
+cd /data/openpilot
+git fetch origin <branch-name>
+git checkout -b <branch-name> FETCH_HEAD
+scons -j$(nproc)
+```
+
+Note: The device's git config doesn't create remote tracking branches automatically, so use `FETCH_HEAD` instead of `origin/<branch-name>` when creating a local branch.
+
 ## Architecture Overview
 
 ### Core Directory Structure
