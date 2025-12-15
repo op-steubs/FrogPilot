@@ -104,6 +104,14 @@ class FrogPilotCard:
     self.always_on_lateral_enabled &= not (carState.brakePressed and carState.vEgo < self.car.frogpilot_toggles.always_on_lateral_pause_speed) or carState.standstill
     self.always_on_lateral_enabled &= not self.error_log.is_file() or self.car.frogpilot_toggles.frogs_go_moo
 
+    # AOL Brake Hold: active when AOL enabled + standstill + toggle on + gas not pressed
+    self.aol_brake_hold_active = (
+        self.always_on_lateral_enabled and
+        carState.standstill and
+        self.car.frogpilot_toggles.aol_brake_hold and
+        not carState.gasPressed
+    )
+
     if sm.updated["frogpilotPlan"] or any(be.type in (ButtonType.accelCruise, ButtonType.resumeCruise) for be in carState.buttonEvents):
       self.accel_pressed = any(be.type in (ButtonType.accelCruise, ButtonType.resumeCruise) for be in carState.buttonEvents)
 
@@ -142,5 +150,6 @@ class FrogPilotCard:
     frogpilotCarState.pauseLateral = self.pause_lateral
     frogpilotCarState.pauseLongitudinal = self.pause_longitudinal
     frogpilotCarState.trafficModeEnabled = self.traffic_mode_enabled
+    frogpilotCarState.aolBrakeHold = self.aol_brake_hold_active
 
     return frogpilotCarState

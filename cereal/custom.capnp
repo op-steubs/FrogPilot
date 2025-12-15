@@ -127,6 +127,7 @@ struct FrogPilotCarState @0xda96579883444c35 {
   pauseLongitudinal @12 :Bool;
   sportGear @13 :Bool;
   trafficModeEnabled @14 :Bool;
+  aolBrakeHold @15 :Bool;
 
   struct ButtonEvent {
     enum Type {

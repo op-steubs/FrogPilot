@@ -176,6 +176,7 @@ frogpilot_default_params: list[tuple[str, str | bytes, int, str]] = [
   ("AlwaysOnLateral", "1", 0, "0"),
   ("AlwaysOnLateralLKAS", "1", 2, "0"),
   ("AlwaysOnLateralMain", "1", 2, "0"),
+  ("AOLBrakeHold", "0", 2, "0"),
   ("AMapKey1", "", 0, ""),
   ("AMapKey2", "", 0, ""),
   ("AutomaticallyDownloadModels", "1", 1, "0"),
@@ -691,6 +692,7 @@ class FrogPilotVariables:
     toggle.always_on_lateral_lkas = toggle.always_on_lateral_set and toggle.use_lkas_for_aol and (params.get_bool("AlwaysOnLateralLKAS") if tuning_level >= level["AlwaysOnLateralLKAS"] else default.get_bool("AlwaysOnLateralLKAS"))
     toggle.always_on_lateral_main = toggle.always_on_lateral_set and not toggle.use_lkas_for_aol and (params.get_bool("AlwaysOnLateralMain") if tuning_level >= level["AlwaysOnLateralMain"] else default.get_bool("AlwaysOnLateralMain"))
     toggle.always_on_lateral_pause_speed = params.get_int("PauseAOLOnBrake") if toggle.always_on_lateral_set and tuning_level >= level["PauseAOLOnBrake"] else default.get_int("PauseAOLOnBrake")
+    toggle.aol_brake_hold = toggle.always_on_lateral_set and (params.get_bool("AOLBrakeHold") if tuning_level >= level["AOLBrakeHold"] else default.get_bool("AOLBrakeHold"))
 
     toggle.automatic_updates = (params.get_bool("AutomaticUpdates") if tuning_level >= level["AutomaticUpdates"] and (self.release_branch or self.vetting_branch) else default.get_bool("AutomaticUpdates")) and not BACKUP_PATH.is_file()
 

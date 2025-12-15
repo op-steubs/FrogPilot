@@ -642,7 +642,10 @@ class Controls:
     standstill = CS.vEgo <= max(self.CP.minSteerSpeed, MIN_LATERAL_CONTROL_SPEED) or CS.standstill
     CC.latActive = (self.active or self.sm['frogpilotCarState'].alwaysOnLateralEnabled) and not CS.steerFaultTemporary and not CS.steerFaultPermanent and \
                    (not standstill or self.joystick_mode) and self.sm['frogpilotPlan'].lateralCheck and not self.sm['frogpilotCarState'].pauseLateral
-    CC.longActive = self.enabled and not self.contains_event_type(ET.OVERRIDE_LONGITUDINAL) and not self.sm['frogpilotCarState'].pauseLongitudinal and self.CP.openpilotLongitudinalControl
+
+    # AOL brake hold at standstill extends longitudinal control
+    aol_brake_hold = self.sm['frogpilotCarState'].aolBrakeHold and CS.standstill
+    CC.longActive = (self.enabled or aol_brake_hold) and not self.contains_event_type(ET.OVERRIDE_LONGITUDINAL) and not self.sm['frogpilotCarState'].pauseLongitudinal and self.CP.openpilotLongitudinalControl
 
     actuators = CC.actuators
     actuators.longControlState = self.LoC.long_control_state

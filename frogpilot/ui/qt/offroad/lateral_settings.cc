@@ -52,6 +52,7 @@ FrogPilotLateralPanel::FrogPilotLateralPanel(FrogPilotSettingsWindow *parent) : 
     {"AlwaysOnLateralMain", tr("Enable With Cruise Control"), tr("<b>Enable \"Always On Lateral\" whenever \"Cruise Control\" is on, even when openpilot is not engaged.</b>"), ""},
     {"AlwaysOnLateralLKAS", tr("Enable With LKAS"), tr("<b>Enable \"Always On Lateral\" whenever \"LKAS\" is on, even when openpilot is not engaged.</b>"), ""},
     {"PauseAOLOnBrake", tr("Pause on Brake Press Below"), tr("<b>Pause \"Always On Lateral\" below the set speed while the brake pedal is pressed.</b>"), ""},
+    {"AOLBrakeHold", tr("Hold Brake When Stopped"), tr("<b>Apply brake hold when stopped with \"Always On Lateral\" enabled.</b> Releases when you press the accelerator."), ""},
 
     {"LaneChanges", tr("Lane Changes"), tr("<b>Allow openpilot to change lanes.</b>"), "../../frogpilot/assets/toggle_icons/icon_lane.png"},
     {"NudgelessLaneChange", tr("Automatic Lane Changes"), tr("<b>When the turn signal is on, openpilot will automatically change lanes.</b> No steering-wheel nudge required!"), ""},
