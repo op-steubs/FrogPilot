@@ -38,6 +38,19 @@ pre-commit run --all
 ### Python Environment
 - **Required Python Version**: 3.11.4 (specified in `.python-version`)
 
+## Device Connection
+
+SSH into the comma device:
+```bash
+ssh -i ~/.ssh/id_ed25519 comma@10.7.7.133
+```
+
+- **Hostname**: comma-2a7e1e2
+- **User**: comma
+- **IP**: 10.7.7.133
+- **Port**: 22
+- **Key**: ~/.ssh/id_ed25519
+
 ## Architecture Overview
 
 ### Core Directory Structure
