@@ -177,11 +177,11 @@ with open("board/obj/cert.h", "w") as f:
   for cert in certs:
     f.write("\n".join(cert) + "\n")
 
-# panda fw
-SConscript('board/SConscript')
+# panda fw (disabled - sources not included in release branches)
+# SConscript('board/SConscript')
 
-# panda jungle fw
-SConscript('board/jungle/SConscript')
+# panda jungle fw (disabled - sources not included in release branches)
+# SConscript('board/jungle/SConscript')
 
 # test files
 if GetOption('extras'):
