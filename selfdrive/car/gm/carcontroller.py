@@ -187,8 +187,9 @@ class CarController(CarControllerBase):
           if CC.cruiseControl.resume and CS.out.cruiseState.standstill and frogpilot_toggles.volt_sng:
             acc_engaged = False
           else:
-            # Use longActive to include AOL brake hold state (when cruise disengaged but brake hold active)
-            acc_engaged = CC.longActive
+            # Use CC.enabled (cruise engaged state) for GasRegenCmdActive
+            # Setting GasRegenCmdActive=1 when cruise is OFF causes "Cruise Fault" on GM vehicles
+            acc_engaged = CC.enabled
 
           # GasRegenCmdActive needs to be 1 to avoid cruise faults. It describes the ACC state, not actuation
           can_sends.append(gmcan.create_gas_regen_command(self.packer_pt, CanBus.POWERTRAIN, self.apply_gas, idx, acc_engaged, at_full_stop))
