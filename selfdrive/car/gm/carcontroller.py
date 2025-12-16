@@ -149,113 +149,106 @@ class CarController(CarControllerBase):
                 self.aol_brake_hold_active = False
 
         if self.aol_brake_hold_active:
-            # Send friction brake directly with full stop mode (0xd)
-            # Use very high brake pressure to overcome transmission creep
+            # AOL Brake Hold - send ONLY friction brake command
+            # CRITICAL: Do NOT send gas_regen_command here!
+            # twilsonco's working implementation only sends friction brake during hold.
+            # Sending gas_regen with GasRegenCmdActive=False tells EBCM to ignore brakes.
             idx = (self.frame // 4) % 4
-            aol_hold_brake_pressure = 3000  # Much stronger to overcome transmission creep
-
-            # Send gas regen command with GasRegenFullStopActive=True to signal full stop
-            # Keep GasRegenCmdActive=False since cruise is not engaged
-            can_sends.append(gmcan.create_gas_regen_command(
-                self.packer_pt,
-                CanBus.POWERTRAIN,
-                self.params.INACTIVE_REGEN,  # No throttle
-                idx,
-                False,  # GasRegenCmdActive = False (cruise not engaged)
-                True    # GasRegenFullStopActive = True (at full stop)
-            ))
 
             can_sends.append(gmcan.create_friction_brake_command(
                 self.packer_ch,
                 CanBus.CHASSIS,
-                aol_hold_brake_pressure,  # Very strong brake pressure for hold
+                self.params.MAX_BRAKE,  # Standard brake pressure for hold
                 idx,
                 True,   # enabled
                 True,   # near_stop
                 True,   # at_full_stop (triggers mode 0xd - GM full stop hold)
                 self.CP
             ))
+            # Skip normal longitudinal control - don't send gas_regen_command
 
-        stopping = actuators.longControlState == LongCtrlState.stopping
-
-        # Pitch compensated acceleration;
-        # TODO: include future pitch (sm['modelDataV2'].orientation.y) to account for long actuator delay
-        if frogpilot_toggles.long_pitch and len(CC.orientationNED) > 1:
-          self.pitch.update(CC.orientationNED[1])
-          self.accel_g = ACCELERATION_DUE_TO_GRAVITY * apply_deadzone(self.pitch.x, PITCH_DEADZONE) # driving uphill is positive pitch
-          accel += self.accel_g
-          brake_accel = actuators.accel + self.accel_g * interp(CS.out.vEgo, BRAKE_PITCH_FACTOR_BP, BRAKE_PITCH_FACTOR_V)
-
-        at_full_stop = CC.longActive and CS.out.standstill
-        near_stop = CC.longActive and (CS.out.vEgo < self.params.NEAR_STOP_BRAKE_PHASE)
-        interceptor_gas_cmd = 0
-        if not CC.longActive:
-          # ASCM sends max regen when not enabled
-          self.apply_gas = self.params.INACTIVE_REGEN
-          self.apply_brake = 0
-        elif near_stop and stopping and not CC.cruiseControl.resume:
-          self.apply_gas = self.params.INACTIVE_REGEN
-          self.apply_brake = int(min(-100 * frogpilot_toggles.stopAccel, self.params.MAX_BRAKE))
         else:
-          # Normal operation
-          if self.CP.carFingerprint in EV_CAR:
-            self.params.update_ev_gas_brake_threshold(CS.out.vEgo)
-            self.apply_gas = int(round(interp(accel, self.params.EV_GAS_LOOKUP_BP, self.params.GAS_LOOKUP_V)))
-            self.apply_brake = int(round(interp(brake_accel, self.params.EV_BRAKE_LOOKUP_BP, self.params.BRAKE_LOOKUP_V)))
-          else:
-            self.apply_gas = int(round(interp(accel, self.params.GAS_LOOKUP_BP, self.params.GAS_LOOKUP_V)))
-            self.apply_brake = int(round(interp(brake_accel, self.params.BRAKE_LOOKUP_BP, self.params.BRAKE_LOOKUP_V)))
-          # Don't allow any gas above inactive regen while stopping
-          # FIXME: brakes aren't applied immediately when enabling at a stop
-          if stopping:
+          # Normal longitudinal control path (only runs when AOL brake hold is NOT active)
+          stopping = actuators.longControlState == LongCtrlState.stopping
+
+          # Pitch compensated acceleration;
+          # TODO: include future pitch (sm['modelDataV2'].orientation.y) to account for long actuator delay
+          if frogpilot_toggles.long_pitch and len(CC.orientationNED) > 1:
+            self.pitch.update(CC.orientationNED[1])
+            self.accel_g = ACCELERATION_DUE_TO_GRAVITY * apply_deadzone(self.pitch.x, PITCH_DEADZONE) # driving uphill is positive pitch
+            accel += self.accel_g
+            brake_accel = actuators.accel + self.accel_g * interp(CS.out.vEgo, BRAKE_PITCH_FACTOR_BP, BRAKE_PITCH_FACTOR_V)
+
+          at_full_stop = CC.longActive and CS.out.standstill
+          near_stop = CC.longActive and (CS.out.vEgo < self.params.NEAR_STOP_BRAKE_PHASE)
+          interceptor_gas_cmd = 0
+          if not CC.longActive:
+            # ASCM sends max regen when not enabled
             self.apply_gas = self.params.INACTIVE_REGEN
-          if self.CP.carFingerprint in CC_ONLY_CAR:
-            # gas interceptor only used for full long control on cars without ACC
-            interceptor_gas_cmd = self.calc_pedal_command(actuators.accel, CC.longActive)
-
-        if self.CP.enableGasInterceptor and self.apply_gas > self.params.INACTIVE_REGEN and CS.out.cruiseState.standstill:
-          # "Tap" the accelerator pedal to re-engage ACC
-          interceptor_gas_cmd = self.params.SNG_INTERCEPTOR_GAS
-          self.apply_brake = 0
-          self.apply_gas = self.params.INACTIVE_REGEN
-
-        idx = (self.frame // 4) % 4
-
-        if self.CP.flags & GMFlags.CC_LONG.value:
-          if CC.longActive and CS.out.vEgo > self.CP.minEnableSpeed:
-            # Using extend instead of append since the message is only sent intermittently
-            can_sends.extend(gmcan.create_gm_cc_spam_command(self.packer_pt, self, CS, actuators))
-        if self.CP.enableGasInterceptor:
-          can_sends.append(create_gas_interceptor_command(self.packer_pt, interceptor_gas_cmd, idx))
-        if self.CP.carFingerprint not in CC_ONLY_CAR:
-          friction_brake_bus = CanBus.CHASSIS
-          # GM Camera exceptions
-          # TODO: can we always check the longControlState?
-          if self.CP.networkLocation == NetworkLocation.fwdCamera and self.CP.carFingerprint not in CC_ONLY_CAR:
-            at_full_stop = at_full_stop and stopping
-            friction_brake_bus = CanBus.POWERTRAIN
-
-          if self.CP.autoResumeSng:
-            resume = actuators.longControlState != LongCtrlState.starting or CC.cruiseControl.resume
-            at_full_stop = at_full_stop and not resume
-
-          # FrogPilot variables
-          if CC.cruiseControl.resume and CS.out.cruiseState.standstill and frogpilot_toggles.volt_sng:
-            acc_engaged = False
+            self.apply_brake = 0
+          elif near_stop and stopping and not CC.cruiseControl.resume:
+            self.apply_gas = self.params.INACTIVE_REGEN
+            self.apply_brake = int(min(-100 * frogpilot_toggles.stopAccel, self.params.MAX_BRAKE))
           else:
-            # Use CC.enabled (cruise engaged state) for GasRegenCmdActive
-            # Setting GasRegenCmdActive=1 when cruise is OFF causes "Cruise Fault" on GM vehicles
-            acc_engaged = CC.enabled
+            # Normal operation
+            if self.CP.carFingerprint in EV_CAR:
+              self.params.update_ev_gas_brake_threshold(CS.out.vEgo)
+              self.apply_gas = int(round(interp(accel, self.params.EV_GAS_LOOKUP_BP, self.params.GAS_LOOKUP_V)))
+              self.apply_brake = int(round(interp(brake_accel, self.params.EV_BRAKE_LOOKUP_BP, self.params.BRAKE_LOOKUP_V)))
+            else:
+              self.apply_gas = int(round(interp(accel, self.params.GAS_LOOKUP_BP, self.params.GAS_LOOKUP_V)))
+              self.apply_brake = int(round(interp(brake_accel, self.params.BRAKE_LOOKUP_BP, self.params.BRAKE_LOOKUP_V)))
+            # Don't allow any gas above inactive regen while stopping
+            # FIXME: brakes aren't applied immediately when enabling at a stop
+            if stopping:
+              self.apply_gas = self.params.INACTIVE_REGEN
+            if self.CP.carFingerprint in CC_ONLY_CAR:
+              # gas interceptor only used for full long control on cars without ACC
+              interceptor_gas_cmd = self.calc_pedal_command(actuators.accel, CC.longActive)
 
-          # GasRegenCmdActive needs to be 1 to avoid cruise faults. It describes the ACC state, not actuation
-          can_sends.append(gmcan.create_gas_regen_command(self.packer_pt, CanBus.POWERTRAIN, self.apply_gas, idx, acc_engaged, at_full_stop))
-          can_sends.append(gmcan.create_friction_brake_command(self.packer_ch, friction_brake_bus, self.apply_brake,
-                                                             idx, CC.longActive, near_stop, at_full_stop, self.CP))
+          if self.CP.enableGasInterceptor and self.apply_gas > self.params.INACTIVE_REGEN and CS.out.cruiseState.standstill:
+            # "Tap" the accelerator pedal to re-engage ACC
+            interceptor_gas_cmd = self.params.SNG_INTERCEPTOR_GAS
+            self.apply_brake = 0
+            self.apply_gas = self.params.INACTIVE_REGEN
 
-          # Send dashboard UI commands (ACC status)
-          send_fcw = hud_alert == VisualAlert.fcw
-          can_sends.append(gmcan.create_acc_dashboard_command(self.packer_pt, CanBus.POWERTRAIN, CC.enabled,
-                                                              hud_v_cruise * CV.MS_TO_KPH, hud_control, send_fcw))
+          idx = (self.frame // 4) % 4
+
+          if self.CP.flags & GMFlags.CC_LONG.value:
+            if CC.longActive and CS.out.vEgo > self.CP.minEnableSpeed:
+              # Using extend instead of append since the message is only sent intermittently
+              can_sends.extend(gmcan.create_gm_cc_spam_command(self.packer_pt, self, CS, actuators))
+          if self.CP.enableGasInterceptor:
+            can_sends.append(create_gas_interceptor_command(self.packer_pt, interceptor_gas_cmd, idx))
+          if self.CP.carFingerprint not in CC_ONLY_CAR:
+            friction_brake_bus = CanBus.CHASSIS
+            # GM Camera exceptions
+            # TODO: can we always check the longControlState?
+            if self.CP.networkLocation == NetworkLocation.fwdCamera and self.CP.carFingerprint not in CC_ONLY_CAR:
+              at_full_stop = at_full_stop and stopping
+              friction_brake_bus = CanBus.POWERTRAIN
+
+            if self.CP.autoResumeSng:
+              resume = actuators.longControlState != LongCtrlState.starting or CC.cruiseControl.resume
+              at_full_stop = at_full_stop and not resume
+
+            # FrogPilot variables
+            if CC.cruiseControl.resume and CS.out.cruiseState.standstill and frogpilot_toggles.volt_sng:
+              acc_engaged = False
+            else:
+              # Use CC.enabled (cruise engaged state) for GasRegenCmdActive
+              # Setting GasRegenCmdActive=1 when cruise is OFF causes "Cruise Fault" on GM vehicles
+              acc_engaged = CC.enabled
+
+            # GasRegenCmdActive needs to be 1 to avoid cruise faults. It describes the ACC state, not actuation
+            can_sends.append(gmcan.create_gas_regen_command(self.packer_pt, CanBus.POWERTRAIN, self.apply_gas, idx, acc_engaged, at_full_stop))
+            can_sends.append(gmcan.create_friction_brake_command(self.packer_ch, friction_brake_bus, self.apply_brake,
+                                                               idx, CC.longActive, near_stop, at_full_stop, self.CP))
+
+            # Send dashboard UI commands (ACC status)
+            send_fcw = hud_alert == VisualAlert.fcw
+            can_sends.append(gmcan.create_acc_dashboard_command(self.packer_pt, CanBus.POWERTRAIN, CC.enabled,
+                                                                hud_v_cruise * CV.MS_TO_KPH, hud_control, send_fcw))
       else:
         # to keep accel steady for logs when not sending gas
         accel += self.accel_g
