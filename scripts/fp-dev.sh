@@ -59,6 +59,11 @@ print_error() {
     echo -e "${RED}✗${NC} $1"
 }
 
+# Ring terminal bell to notify user
+notify_done() {
+    printf '\a'
+}
+
 check_device() {
     print_status "Checking device connection..."
     if ! ssh_cmd "echo connected" &>/dev/null; then
@@ -168,6 +173,7 @@ cmd_build() {
 
     if ssh_cmd "$BUILD_CMD" 2>&1; then
         print_success "Build completed successfully!"
+        notify_done
         echo ""
         print_status "Branch '$LOCAL_BRANCH' is built and ready"
         print_warning "Device is still running: $DEVICE_CURRENT"
@@ -176,6 +182,7 @@ cmd_build() {
         echo "To stay safe, run: ./scripts/fp-dev.sh safe"
     else
         print_error "Build failed!"
+        notify_done
         echo ""
         print_status "Switching back to safe branch..."
         ssh_cmd "cd ${REPO_PATH} && git checkout ${SAFE_BRANCH}"
