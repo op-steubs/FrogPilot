@@ -7,7 +7,6 @@ from openpilot.frogpilot.common.frogpilot_variables import ERROR_LOGS_PATH, NON_
 
 ButtonType = car.CarState.ButtonEvent.Type
 FrogPilotButtonType = custom.FrogPilotCarState.ButtonEvent.Type
-GearShifter = car.CarState.GearShifter
 
 def handle_experimental_mode(conditional_experimental_mode):
   if conditional_experimental_mode:
@@ -105,18 +104,15 @@ class FrogPilotCard:
     self.always_on_lateral_enabled &= not (carState.brakePressed and carState.vEgo < self.car.frogpilot_toggles.always_on_lateral_pause_speed) or carState.standstill
     self.always_on_lateral_enabled &= not self.error_log.is_file() or self.car.frogpilot_toggles.frogs_go_moo
 
-    # AOL Brake Hold: requires L gear (single pedal mode) OR cruise in standstill
-    # L gear allows friction brakes without GasRegenCmdActive = 1 (no cruise fault)
-    # Cruise standstill means cruise was engaged and car stopped (normal ACC behavior)
-    # In D gear without cruise engaged, brake hold is disabled (no fault, just doesn't activate)
-    single_pedal_mode = carState.gearShifter == GearShifter.low
+    # AOL Brake Hold: active when AOL enabled + standstill + toggle on + gas not pressed + cruise MAIN on
+    # Note: We removed the L gear / cruise standstill requirement since reverting acc_engaged to CC.enabled
+    # prevents the cruise fault. The friction brake command works regardless of GasRegenCmdActive state.
     self.aol_brake_hold_active = (
         self.always_on_lateral_enabled and
         carState.standstill and
         self.car.frogpilot_toggles.aol_brake_hold and
         not carState.gasPressed and
-        carState.cruiseState.available and  # Cruise MAIN switch must be ON
-        (single_pedal_mode or carState.cruiseState.standstill)  # L gear OR cruise standstill
+        carState.cruiseState.available  # Cruise MAIN switch must be ON
     )
 
     if sm.updated["frogpilotPlan"] or any(be.type in (ButtonType.accelCruise, ButtonType.resumeCruise) for be in carState.buttonEvents):
