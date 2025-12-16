@@ -123,16 +123,13 @@ class CarController(CarControllerBase):
         # AOL Brake Hold - Direct friction brake when conditions met
         # This bypasses normal control flow which zeros brakes when CC.longActive=False
         # Similar to twilsonco's auto-hold implementation
-        # Use vEgo < 0.5 instead of standstill because:
-        # - standstill threshold is ~0.086 m/s (very strict)
-        # - On flat/decline, transmission creep can exceed this threshold
-        # - On incline, gravity counteracts creep keeping car at true standstill
-        # - Using 0.5 m/s (~1 mph) catches the creep situation
+        # Note: Don't check CC.latActive - it's always False at standstill because
+        # lateral control is disabled when stopped. The aol_brake_hold toggle already
+        # requires AOL to be enabled (always_on_lateral_set must be True).
         aol_brake_hold_active = (
             frogpilot_toggles.aol_brake_hold and
-            CC.latActive and              # AOL is actively steering
             not CC.enabled and            # Cruise NOT engaged (normal ACC handles engaged case)
-            CS.out.vEgo < 0.5 and         # Very low speed (catches creep on flat/decline)
+            CS.out.vEgo < 0.5 and         # Very low speed
             not CS.out.gasPressed and     # Gas not pressed
             CS.out.cruiseState.available  # Cruise MAIN switch is ON
         )
