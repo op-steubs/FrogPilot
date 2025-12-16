@@ -120,6 +120,33 @@ class CarController(CarControllerBase):
     if self.CP.openpilotLongitudinalControl:
       # Gas/regen, brakes, and UI commands - all at 25Hz
       if self.frame % 4 == 0:
+        # AOL Brake Hold - Direct friction brake when conditions met
+        # This bypasses normal control flow which zeros brakes when CC.longActive=False
+        # Similar to twilsonco's auto-hold implementation
+        aol_brake_hold_active = (
+            frogpilot_toggles.aol_brake_hold and
+            CC.latActive and              # AOL is actively steering
+            not CC.enabled and            # Cruise NOT engaged (normal ACC handles engaged case)
+            CS.out.standstill and         # Vehicle at standstill
+            not CS.out.gasPressed and     # Gas not pressed
+            CS.out.cruiseState.available  # Cruise MAIN switch is ON
+        )
+
+        if aol_brake_hold_active:
+            # Send friction brake directly with full stop mode (0xd)
+            # Don't modify GasRegenCmdActive - keep it at 0 (cruise off)
+            idx = (self.frame // 4) % 4
+            can_sends.append(gmcan.create_friction_brake_command(
+                self.packer_ch,
+                CanBus.CHASSIS,
+                self.params.MAX_BRAKE,  # Full brake pressure for hold
+                idx,
+                True,   # enabled
+                True,   # near_stop
+                True,   # at_full_stop (triggers mode 0xd - GM full stop hold)
+                self.CP
+            ))
+
         stopping = actuators.longControlState == LongCtrlState.stopping
 
         # Pitch compensated acceleration;

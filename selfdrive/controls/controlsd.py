@@ -643,9 +643,9 @@ class Controls:
     CC.latActive = (self.active or self.sm['frogpilotCarState'].alwaysOnLateralEnabled) and not CS.steerFaultTemporary and not CS.steerFaultPermanent and \
                    (not standstill or self.joystick_mode) and self.sm['frogpilotPlan'].lateralCheck and not self.sm['frogpilotCarState'].pauseLateral
 
-    # AOL brake hold at standstill extends longitudinal control
-    aol_brake_hold = self.sm['frogpilotCarState'].aolBrakeHold and CS.standstill
-    CC.longActive = (self.enabled or aol_brake_hold) and not self.contains_event_type(ET.OVERRIDE_LONGITUDINAL) and not self.sm['frogpilotCarState'].pauseLongitudinal and self.CP.openpilotLongitudinalControl
+    # AOL brake hold is now handled directly in GM carcontroller.py (sends friction brake directly)
+    # No longer need to extend CC.longActive for brake hold - that caused conflicting CAN messages
+    CC.longActive = self.enabled and not self.contains_event_type(ET.OVERRIDE_LONGITUDINAL) and not self.sm['frogpilotCarState'].pauseLongitudinal and self.CP.openpilotLongitudinalControl
 
     actuators = CC.actuators
     actuators.longControlState = self.LoC.long_control_state
@@ -671,8 +671,8 @@ class Controls:
     if not self.joystick_mode:
       # accel PID loop
       pid_accel_limits = self.CI.get_pid_accel_limits(self.CP, CS.vEgo, self.v_cruise_helper.v_cruise_kph * CV.KPH_TO_MS)
-      # Force shouldStop=True when AOL brake hold is active to enter stopping state
-      should_stop = long_plan.shouldStop or aol_brake_hold
+      # AOL brake hold is now handled directly in GM carcontroller.py
+      should_stop = long_plan.shouldStop
       if self.frogpilot_toggles.old_long_api:
         t_since_plan = (self.sm.frame - self.sm.recv_frame['longitudinalPlan']) * DT_CTRL
         actuators.accel = float(min(self.LoC.update_old_long(CC.longActive, CS, long_plan, pid_accel_limits, t_since_plan, self.frogpilot_toggles), self.frogpilot_toggles.max_desired_acceleration))
