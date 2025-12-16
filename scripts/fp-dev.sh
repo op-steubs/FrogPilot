@@ -126,10 +126,10 @@ cmd_build() {
     # Store current branch to restore later
     DEVICE_CURRENT=$(ssh_cmd "cd ${REPO_PATH} && git branch --show-current")
 
-    # Checkout the dev branch
+    # Checkout the dev branch (device doesn't create remote tracking branches)
     print_status "Checking out ${LOCAL_BRANCH}..."
     ssh_cmd "cd ${REPO_PATH} && git checkout ${LOCAL_BRANCH} 2>/dev/null || git checkout -b ${LOCAL_BRANCH} FETCH_HEAD"
-    ssh_cmd "cd ${REPO_PATH} && git reset --hard origin/${LOCAL_BRANCH}"
+    ssh_cmd "cd ${REPO_PATH} && git reset --hard FETCH_HEAD"
 
     # Build with cache disabled
     print_status "Building (this may take a few minutes)..."
