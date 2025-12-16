@@ -51,8 +51,29 @@ ssh -i ~/.ssh/id_ed25519 comma@10.7.7.133
 - **Port**: 22
 - **Key**: ~/.ssh/id_ed25519
 
-### Deploying Branches to Device
-To checkout a new branch on the comma device (from the user's fork):
+### Development Workflow Script
+
+Use `scripts/fp-dev.sh` for the recommended development workflow:
+
+```bash
+# Push current branch to GitHub
+./scripts/fp-dev.sh push
+
+# Build current branch on device (handles libyuv, params cleanup automatically)
+./scripts/fp-dev.sh build
+
+# Switch device to your dev branch and reboot
+./scripts/fp-dev.sh test
+
+# Switch device back to safe branch (FrogPilot-Staging)
+./scripts/fp-dev.sh safe
+
+# Check status of local and device
+./scripts/fp-dev.sh status
+```
+
+### Manual Device Deployment
+To manually checkout a branch on the comma device:
 ```bash
 cd /data/openpilot
 git fetch origin <branch-name>
@@ -61,6 +82,27 @@ scons -j$(nproc)
 ```
 
 Note: The device's git config doesn't create remote tracking branches automatically, so use `FETCH_HEAD` instead of `origin/<branch-name>` when creating a local branch.
+
+### Build Troubleshooting
+
+**libyuv missing (`cannot find -lyuv`)**: The libyuv submodule may be corrupted. Fix:
+```bash
+cd /data/openpilot/third_party/libyuv
+rm -rf libyuv
+./build.sh
+```
+
+**UnknownKeyName error for new params**: The params_pyx.so wasn't rebuilt. Clean and rebuild:
+```bash
+cd /data/openpilot
+rm -f common/params_pyx.so common/params_pyx.o common/params_pyx.cpp
+PATH=/usr/local/pyenv/versions/3.11.4/bin:$PATH scons --cache-disable -j4 common/params_pyx.so
+```
+
+**Full build fails**: Tinygrad models need ONNX files downloaded at runtime. Build only specific targets:
+```bash
+PATH=/usr/local/pyenv/versions/3.11.4/bin:$PATH scons --cache-disable -j4 common/params_pyx.so selfdrive/ui/ui
+```
 
 ## Architecture Overview
 
