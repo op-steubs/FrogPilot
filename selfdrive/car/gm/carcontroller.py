@@ -54,6 +54,7 @@ class CarController(CarControllerBase):
 
     # FrogPilot variables
     self.accel_g = 0.0
+    self.aol_brake_hold_active = False  # Track AOL brake hold state for hysteresis
 
     self.pitch = FirstOrderFilter(0., 0.09 * 4, DT_CTRL * 4)  # runs at 25 Hz
 
@@ -120,26 +121,38 @@ class CarController(CarControllerBase):
     if self.CP.openpilotLongitudinalControl:
       # Gas/regen, brakes, and UI commands - all at 25Hz
       if self.frame % 4 == 0:
-        # AOL Brake Hold - Direct friction brake when conditions met
-        # This bypasses normal control flow which zeros brakes when CC.longActive=False
-        # Similar to twilsonco's auto-hold implementation
-        # Note: Don't check CC.latActive - it's always False at standstill because
-        # lateral control is disabled when stopped. The aol_brake_hold toggle already
-        # requires AOL to be enabled (always_on_lateral_set must be True).
-        aol_brake_hold_active = (
+        # AOL Brake Hold - Direct friction brake with hysteresis
+        # Uses state tracking so brake hold stays active until gas pedal is pressed,
+        # even if the car creeps forward slightly due to transmission.
+        #
+        # Activation: low speed + not gas pressed + cruise MAIN on + cruise not engaged
+        # Deactivation: ONLY when gas pedal is pressed (not speed-based)
+
+        # Check base conditions (always required)
+        aol_brake_hold_base = (
             frogpilot_toggles.aol_brake_hold and
             not CC.enabled and            # Cruise NOT engaged (normal ACC handles engaged case)
-            CS.out.vEgo < 0.5 and         # Very low speed
             not CS.out.gasPressed and     # Gas not pressed
             CS.out.cruiseState.available  # Cruise MAIN switch is ON
         )
 
-        if aol_brake_hold_active:
+        # Activation: need to be at very low speed to initially activate
+        if aol_brake_hold_base and CS.out.vEgo < 0.3 and not self.aol_brake_hold_active:
+            self.aol_brake_hold_active = True
+
+        # Deactivation: ONLY when gas pedal pressed OR cruise engaged OR cruise MAIN off
+        if self.aol_brake_hold_active:
+            if CS.out.gasPressed or CC.enabled or not CS.out.cruiseState.available:
+                self.aol_brake_hold_active = False
+            # Also deactivate if toggle is turned off
+            if not frogpilot_toggles.aol_brake_hold:
+                self.aol_brake_hold_active = False
+
+        if self.aol_brake_hold_active:
             # Send friction brake directly with full stop mode (0xd)
-            # Use higher brake pressure than MAX_BRAKE (400) for strong hold on flat/downhill
-            # MAX_BRAKE is tuned for dynamic braking with regen, but at standstill we need more
+            # Use very high brake pressure to overcome transmission creep
             idx = (self.frame // 4) % 4
-            aol_hold_brake_pressure = 1200  # Stronger than MAX_BRAKE (400) for reliable hold
+            aol_hold_brake_pressure = 3000  # Much stronger to overcome transmission creep
 
             # Send gas regen command with GasRegenFullStopActive=True to signal full stop
             # Keep GasRegenCmdActive=False since cruise is not engaged
@@ -155,7 +168,7 @@ class CarController(CarControllerBase):
             can_sends.append(gmcan.create_friction_brake_command(
                 self.packer_ch,
                 CanBus.CHASSIS,
-                aol_hold_brake_pressure,  # Strong brake pressure for hold
+                aol_hold_brake_pressure,  # Very strong brake pressure for hold
                 idx,
                 True,   # enabled
                 True,   # near_stop
