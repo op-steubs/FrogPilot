@@ -134,12 +134,26 @@ class CarController(CarControllerBase):
 
         if aol_brake_hold_active:
             # Send friction brake directly with full stop mode (0xd)
-            # Don't modify GasRegenCmdActive - keep it at 0 (cruise off)
+            # Use higher brake pressure than MAX_BRAKE (400) for strong hold on flat/downhill
+            # MAX_BRAKE is tuned for dynamic braking with regen, but at standstill we need more
             idx = (self.frame // 4) % 4
+            aol_hold_brake_pressure = 1200  # Stronger than MAX_BRAKE (400) for reliable hold
+
+            # Send gas regen command with GasRegenFullStopActive=True to signal full stop
+            # Keep GasRegenCmdActive=False since cruise is not engaged
+            can_sends.append(gmcan.create_gas_regen_command(
+                self.packer_pt,
+                CanBus.POWERTRAIN,
+                self.params.INACTIVE_REGEN,  # No throttle
+                idx,
+                False,  # GasRegenCmdActive = False (cruise not engaged)
+                True    # GasRegenFullStopActive = True (at full stop)
+            ))
+
             can_sends.append(gmcan.create_friction_brake_command(
                 self.packer_ch,
                 CanBus.CHASSIS,
-                self.params.MAX_BRAKE,  # Full brake pressure for hold
+                aol_hold_brake_pressure,  # Strong brake pressure for hold
                 idx,
                 True,   # enabled
                 True,   # near_stop
