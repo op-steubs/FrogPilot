@@ -131,9 +131,14 @@ cmd_build() {
     ssh_cmd "cd ${REPO_PATH} && git checkout ${LOCAL_BRANCH} 2>/dev/null || git checkout -b ${LOCAL_BRANCH} FETCH_HEAD"
     ssh_cmd "cd ${REPO_PATH} && git reset --hard FETCH_HEAD"
 
-    # Build with cache disabled
-    print_status "Building (this may take a few minutes)..."
-    BUILD_CMD="cd ${REPO_PATH} && PATH=/usr/local/pyenv/versions/3.11.4/bin:\$PATH /usr/local/pyenv/versions/3.11.4/bin/python -m SCons --cache-disable -j4"
+    # Build with cache disabled - target specific components
+    # Full build fails because tinygrad models need ONNX files downloaded at runtime
+    print_status "Building params module..."
+    SCONS_PREFIX="PATH=/usr/local/pyenv/versions/3.11.4/bin:\$PATH"
+    SCONS_CMD="${SCONS_PREFIX} scons --cache-disable -j4"
+
+    print_status "Building UI (this may take a few minutes)..."
+    BUILD_CMD="cd ${REPO_PATH} && ${SCONS_CMD} common/params_pyx.so selfdrive/ui/ui"
 
     if ssh_cmd "$BUILD_CMD" 2>&1; then
         print_success "Build completed successfully!"
