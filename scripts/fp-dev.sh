@@ -156,9 +156,12 @@ cmd_build() {
     SCONS_PREFIX="PATH=/usr/local/pyenv/versions/3.11.4/bin:\$PATH"
     SCONS_CMD="${SCONS_PREFIX} scons --cache-disable -j4"
 
-    # Clean params_pyx artifacts to ensure fresh build (avoids UnknownKeyName errors)
-    print_status "Cleaning params module for fresh build..."
+    # Clean build artifacts to ensure fresh compilation after git reset
+    # SCons may not detect changes properly when files are reset to different versions
+    print_status "Cleaning build artifacts for fresh build..."
     ssh_cmd "cd ${REPO_PATH} && rm -f common/params_pyx.so common/params_pyx.o common/params_pyx.cpp"
+    ssh_cmd "cd ${REPO_PATH} && rm -f frogpilot/ui/qt/offroad/*.o frogpilot/ui/qt/onroad/*.o frogpilot/ui/qt/widgets/*.o"
+    ssh_cmd "cd ${REPO_PATH} && rm -f frogpilot/ui/*.o selfdrive/ui/ui"
 
     print_status "Building UI (this may take a few minutes)..."
     BUILD_CMD="cd ${REPO_PATH} && ${SCONS_CMD} common/params_pyx.so selfdrive/ui/ui"
