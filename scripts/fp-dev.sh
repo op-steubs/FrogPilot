@@ -126,23 +126,14 @@ cmd_build() {
     # Store current branch to restore later
     DEVICE_CURRENT=$(ssh_cmd "cd ${REPO_PATH} && git branch --show-current")
 
-    # Checkout the dev branch (device doesn't create tracking branches automatically)
+    # Checkout the dev branch
     print_status "Checking out ${LOCAL_BRANCH}..."
     ssh_cmd "cd ${REPO_PATH} && git checkout ${LOCAL_BRANCH} 2>/dev/null || git checkout -b ${LOCAL_BRANCH} FETCH_HEAD"
-    ssh_cmd "cd ${REPO_PATH} && git reset --hard FETCH_HEAD"
+    ssh_cmd "cd ${REPO_PATH} && git reset --hard origin/${LOCAL_BRANCH}"
 
     # Build with cache disabled
-    # Note: Full build fails on release branches (missing panda sources)
-    # So we build only the necessary components
-    print_status "Building params module..."
-    SCONS_CMD="PATH=/usr/local/pyenv/versions/3.11.4/bin:\$PATH /usr/local/pyenv/versions/3.11.4/bin/python -m SCons --cache-disable -j4"
-    BUILD_PARAMS="cd ${REPO_PATH} && ${SCONS_CMD} common/params_pyx.so"
-
-    print_status "Building UI (main binary only)..."
-    BUILD_UI="cd ${REPO_PATH} && ${SCONS_CMD} selfdrive/ui/ui"
-
-    # Combine both builds
-    BUILD_CMD="${BUILD_PARAMS} && ${BUILD_UI}"
+    print_status "Building (this may take a few minutes)..."
+    BUILD_CMD="cd ${REPO_PATH} && PATH=/usr/local/pyenv/versions/3.11.4/bin:\$PATH /usr/local/pyenv/versions/3.11.4/bin/python -m SCons --cache-disable -j4"
 
     if ssh_cmd "$BUILD_CMD" 2>&1; then
         print_success "Build completed successfully!"
