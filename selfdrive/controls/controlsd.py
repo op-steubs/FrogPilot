@@ -6,6 +6,7 @@ import threading
 from typing import SupportsFloat
 
 import cereal.messaging as messaging
+import openpilot.system.sentry as sentry
 
 from cereal import car, custom, log
 from msgq.visionipc import VisionIpcClient, VisionStreamType
@@ -189,6 +190,7 @@ class Controls:
 
     # FrogPilot variables
     self.belowSteerSpeed_shown = False
+    self.captured_memory_usage = False
     self.distance_pressed_previously = False
     self.resumeRequired_shown = False
     self.steerTempUnavailableSilent_shown = False
@@ -270,6 +272,9 @@ class Controls:
       self.events.add(EventName.outOfSpace)
     if self.sm['deviceState'].memoryUsagePercent > 90 and not SIMULATION:
       self.events.add(EventName.lowMemory)
+      if not self.captured_memory_log:
+        sentry.capture_memory_usage()
+        self.captured_memory_usage = True
 
     # TODO: enable this once loggerd CPU usage is more reasonable
     #cpus = list(self.sm['deviceState'].cpuUsagePercent)
